@@ -1,3 +1,6 @@
+# 0.5.0
+* BREAKING - Everything has been made async
+
 # 0.4.2
 * Interrupt support, adding methods
     
