@@ -145,8 +145,6 @@ pub struct Threshold(pub(crate) u8);
 
 impl Threshold {
     /// Convert a value in multiples of the `g` constant (roughly 9.81) to a threshold.
-    ///
-    ///     assert_eq!(Threshold::g(Range::G2, 1.1), 69);
     #[inline(always)]
     pub fn g(range: Range, gs: f32) -> Self {
         Self::mg(range, gs * 1000.0)
@@ -241,8 +239,6 @@ impl Duration {
 
     /// Convert a number of miliseconds into a duration. Internally a duration is represented
     /// as a multiple of `1 / ODR` where ODR (the output data rate) is of type [`DataRate`].
-    ///
-    ///     assert_eq!(Duration::miliseconds(DataRate::Hz_400, 25.0), 10);
     #[inline(always)]
     pub fn miliseconds(output_data_rate: DataRate, miliseconds: f32) -> Self {
         Self::seconds(output_data_rate, miliseconds * 1000.0)

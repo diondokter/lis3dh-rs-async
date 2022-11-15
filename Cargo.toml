@@ -1,28 +1,25 @@
 [package]
-name = "lis3dh"
-description = "An embedded-hal driver for the LIS3DH accelerometer that implements the generic accelerometer trait"
-version = "0.4.2"
+name = "lis3dh-async"
+description = "An embedded-hal-async driver for the LIS3DH accelerometer that implements the generic accelerometer trait"
+version = "0.5.0"
 license = "Apache-2.0 OR MIT"
 authors = [
     "Benjamin Bergman <ben@benbergman.ca>",
     "Paul Sajna <sajattack@gmail.com>",
     "Jesse Braham <jesse@beta7.io>",
-    "Folkert de Vries <folkert@folkertdev.nl>"
+    "Folkert de Vries <folkert@folkertdev.nl>",
+    "Dion Dokter <diondokter@gmail.com>",
 ]
 keywords = [
     "embedded-hal-driver",
     "accelerometer",
 ]
-repository = "https://github.com/BenBergman/lis3dh-rs"
-edition = "2018"
+repository = "https://github.com/diondokter/lis3dh-rs-async"
+edition = "2021"
+rust-version = "1.65"
 
 [dependencies]
 accelerometer = "~0.12"
-embedded-hal = "~0.2"
+embedded-hal-async = "0.1.0-alpha.3"
+embedded-hal = "1.0.0-alpha.9"
 num_enum = { version = "~0.5", default-features = false }
-
-[dev-dependencies]
-circuit_playground_express = { version = "~0.7", features = ["use_semihosting"] }
-cortex-m-rt = "~0.6"
-cortex-m-semihosting = "~0.3"
-panic-halt = "~0.2"
