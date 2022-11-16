@@ -1,3 +1,6 @@
+# 0.5.1
+* Relaxed the bounds requirement for the old accelerometer trait functions
+* Added defmt feature
 # 0.5.0
 * BREAKING - Everything has been made async
 

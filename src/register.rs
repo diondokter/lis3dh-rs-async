@@ -3,6 +3,7 @@ use num_enum::TryFromPrimitive;
 
 /// Possible I²C slave addresses.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum SlaveAddr {
     /// Default slave address (`0x18`)
@@ -21,6 +22,7 @@ impl SlaveAddr {
 /// Enumerate all device registers.
 #[allow(dead_code, non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum Register {
     STATUS_AUX = 0x07,
@@ -103,6 +105,7 @@ impl Register {
 /// Full-scale selection.
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum Range {
     /// ±16g
@@ -141,6 +144,7 @@ impl Default for Range {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Threshold(pub(crate) u8);
 
 impl Threshold {
@@ -178,6 +182,7 @@ fn crude_ceil(value: f32) -> u64 {
 /// Output data rate.
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, TryFromPrimitive)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum DataRate {
     /// 400Hz (Default)
@@ -225,6 +230,7 @@ impl DataRate {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Duration(pub(crate) u8);
 
 impl Duration {
@@ -265,6 +271,7 @@ impl Duration {
 ///  * `zyxda` -> `ZYXDA`
 ///  * `xyzda` -> (`XDA`, `YDA`, `ZDA`)
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct DataStatus {
     /// ZYXOR bit
     pub zyxor: bool,
@@ -281,6 +288,7 @@ pub struct DataStatus {
 
 /// Information about what is stored in the FIFO
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct FifoStatus {
     /// The watermark bit is set high when FIFO content exceeds watermark level
     pub watermark: bool,
@@ -313,6 +321,7 @@ impl FifoStatus {
 /// FIFO behavior. See [the spec](https://www.st.com/resource/en/datasheet/lis3dh.pdf#page=22) for
 /// full details.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum FifoMode {
     /// The FIFO is not operational
     ByPass,
@@ -358,6 +367,7 @@ impl FifoMode {
 
 /// Operating mode.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
 pub enum Mode {
     /// High-resolution mode (12-bit data output)

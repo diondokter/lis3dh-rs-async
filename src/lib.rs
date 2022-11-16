@@ -38,6 +38,7 @@ pub use register::{
 /// Accelerometer errors, generic around another error type `E` representing
 /// an (optional) cause of this error.
 #[derive(Debug)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Error<BusError> {
     /// Bus error
     Bus(BusError),
@@ -635,13 +636,7 @@ where
 
         Ok(FifoStatus::from_bits(status))
     }
-}
 
-impl<CORE> Lis3dh<CORE>
-where
-    CORE: Lis3dhCore,
-    CORE::BusError: Debug,
-{
     /// Get normalized ±g reading from the accelerometer. You should be reading
     /// based on data ready interrupt or if reading in a tight loop you should
     /// waiting for `is_data_ready`.
@@ -945,6 +940,7 @@ where
 
 /// Sensor configuration options
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Configuration {
     /// The operating mode, default [`Mode::HighResolution`].
     pub mode: Mode,

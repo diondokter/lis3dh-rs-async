@@ -1,9 +1,11 @@
 use crate::register::*;
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Interrupt1;
 
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Interrupt2;
 
 pub trait Interrupt {
@@ -78,6 +80,7 @@ impl Interrupt for Interrupt2 {
 /// | 1 | 0 | AND combination of interrupt events  |
 /// | 1 | 1 | 6-direction position recognition  |
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum InterruptMode {
     OrCombination = 0b00 << 6,
     Movement = 0b01 << 6,
@@ -122,6 +125,7 @@ impl From<u8> for InterruptMode {
 
 /// Configure which events on which axes trigger an interrupt.
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[doc(alias = "INT1_CFG")]
 #[doc(alias = "INT2_CFG")]
 pub struct InterruptConfig {
@@ -218,6 +222,7 @@ impl InterruptConfig {
 }
 
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[doc(alias = "CTRL_REG3")]
 pub struct IrqPin1Config {
     pub click_en: bool,    // 7
@@ -230,6 +235,7 @@ pub struct IrqPin1Config {
 }
 
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[doc(alias = "CTRL_REG6")]
 pub struct IrqPin2Config {
     pub click_en: bool,   // 7
@@ -277,6 +283,7 @@ impl IrqPin for IrqPin2Config {
 }
 
 #[derive(Debug, Copy, Clone, Default)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[doc(alias = "INT1_SRC")]
 #[doc(alias = "INT2_SRC")]
 pub struct InterruptSource {
@@ -311,6 +318,7 @@ impl InterruptSource {
 ///
 /// [`get_irq_src`]: crate::Lis3dh::get_irq_src
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum LatchInterruptRequest {
     Enable,
     Disable,
@@ -335,6 +343,7 @@ impl From<bool> for LatchInterruptRequest {
 /// 4D detection is a subset of the 6D detection where detection on the Z axis is disabled.
 /// This setting only has effect when the interrupt mode is either `Movement` or `Position`.
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum Detect4D {
     Enable,
     Disable,
