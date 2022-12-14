@@ -1,6 +1,10 @@
+# 0.6.0
+* BREAKING - Now using `embedded-hal-async` version `0.2.0-alpha.0`
+
 # 0.5.1
 * Relaxed the bounds requirement for the old accelerometer trait functions
 * Added defmt feature
+
 # 0.5.0
 * BREAKING - Everything has been made async
 
