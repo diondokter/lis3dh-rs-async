@@ -68,7 +68,7 @@ impl<I2C, E> Lis3dh<Lis3dhI2C<I2C>>
 where
     I2C: I2c<Error = E>,
 {
-    /// Create a new LIS3DH driver from the given I2C peripheral.
+    /// Create a new LIS3DH driver from the given I2C peripheral using the default config.
     /// Default is Hz_400 HighResolution.
     /// An example using the [nrf52840_hal](https://docs.rs/nrf52840-hal/latest/nrf52840_hal/index.html):
     ///
@@ -95,6 +95,18 @@ where
     /// ```
     pub async fn new_i2c(i2c: I2C, address: SlaveAddr) -> Result<Self, Error<E>> {
         Self::new_i2c_with_config(i2c, address, Configuration::default()).await
+    }
+
+    /// Create a new driver instance without talking to the LIS3DH.
+    /// This can be useful when the accelerometer was already on while the microcontroller rebooted and you need
+    /// continuous operation.
+    pub async fn new_i2c_without_config(i2c: I2C, address: SlaveAddr) -> Self {
+        let core = Lis3dhI2C {
+            i2c,
+            address: address.addr(),
+        };
+
+        Lis3dh { core }
     }
 
     pub async fn new_i2c_with_config(
@@ -154,6 +166,15 @@ where
     /// ```
     pub async fn new_spi(spi: SPI) -> Result<Self, Error<ESPI>> {
         Self::new_spi_with_config(spi, Configuration::default()).await
+    }
+
+    /// Create a new driver instance without talking to the LIS3DH.
+    /// This can be useful when the accelerometer was already on while the microcontroller rebooted and you need
+    /// continuous operation.
+    pub async fn new_spi_without_config(spi: SPI) -> Self {
+        let core = Lis3dhSPI { spi };
+
+        Lis3dh { core }
     }
 
     pub async fn new_spi_with_config(spi: SPI, config: Configuration) -> Result<Self, Error<ESPI>> {
