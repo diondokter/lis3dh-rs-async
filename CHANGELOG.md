@@ -1,3 +1,6 @@
+# 0.6.1
+* Added init functions for creating a driver instance without talking to the device
+
 # 0.6.0
 * BREAKING - Now using `embedded-hal-async` version `0.2.0-alpha.0`
 
