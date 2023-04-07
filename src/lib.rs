@@ -18,7 +18,7 @@ use core::future::Future;
 use accelerometer::vector::{F32x3, I16x3};
 use embedded_hal::spi::SpiBusWrite;
 use embedded_hal_async::i2c::I2c;
-use embedded_hal_async::spi::{transaction, SpiBus, SpiDevice};
+use embedded_hal_async::spi::{SpiBus, SpiDevice};
 
 mod interrupts;
 mod register;
@@ -130,7 +130,6 @@ where
 impl<SPI, ESPI> Lis3dh<Lis3dhSPI<SPI>>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     /// Create a new LIS3DH driver from the given SPI peripheral.
     /// An example using the [nrf52840_hal](https://docs.rs/nrf52840-hal/latest/nrf52840_hal/index.html):
@@ -857,7 +856,6 @@ pub struct Lis3dhSPI<SPI> {
 impl<SPI, ESPI> Lis3dhSPI<SPI>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     /// Writes to many registers. Does not check whether all registers
     /// can be written to
@@ -866,16 +864,11 @@ where
         start_register: Register,
         data: &[u8],
     ) -> Result<(), Error<ESPI>> {
-        transaction!(&mut self.spi, move |bus| async move {
-            // Unlike `SpiDevice::transaction`, we don't need to
-            // manually dereference a pointer in order to use the bus.
-            bus.write(&[start_register.addr() | 0x40])?;
-            bus.write(data)?;
-            Ok(())
-        })
-        .await
-        .map_err(Error::Bus)?;
-
+        use embedded_hal::spi::Operation::*;
+        self.spi
+            .transaction(&mut [Write(&[start_register.addr() | 0x40]), Write(data)])
+            .await
+            .map_err(Error::Bus)?;
         Ok(())
     }
 
@@ -885,16 +878,11 @@ where
         start_register: Register,
         buf: &mut [u8],
     ) -> Result<(), Error<ESPI>> {
-        transaction!(&mut self.spi, move |bus| async move {
-            // Unlike `SpiDevice::transaction`, we don't need to
-            // manually dereference a pointer in order to use the bus.
-            bus.write(&[start_register.addr() | 0xC0])?;
-            bus.transfer_in_place(buf).await?;
-            Ok(())
-        })
-        .await
-        .map_err(Error::Bus)?;
-
+        use embedded_hal::spi::Operation::*;
+        self.spi
+            .transaction(&mut [Write(&[start_register.addr() | 0xC0]), TransferInPlace(buf)])
+            .await
+            .map_err(Error::Bus)?;
         Ok(())
     }
 }
@@ -902,7 +890,6 @@ where
 impl<SPI, ESPI> Lis3dhCore for Lis3dhSPI<SPI>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     type BusError = ESPI;
 
@@ -931,19 +918,13 @@ where
 
     /// Read a byte from the given register.
     fn read_register(&mut self, register: Register) -> Self::ReadRegisterFuture<'_> {
+        use embedded_hal::spi::Operation::*;
         async move {
             let mut data = [0];
-
-            transaction!(&mut self.spi, move |bus| async move {
-                // Unlike `SpiDevice::transaction`, we don't need to
-                // manually dereference a pointer in order to use the bus.
-                bus.write(&[register.addr() | 0x80])?;
-                bus.transfer_in_place(&mut data).await?;
-                Ok(())
-            })
-            .await
-            .map_err(Error::Bus)?;
-
+            self.spi
+                .transaction(&mut [Write(&[register.addr() | 0x80]), TransferInPlace(&mut data)])
+                .await
+                .map_err(Error::Bus)?;
             Ok(data[0])
         }
     }
