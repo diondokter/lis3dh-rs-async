@@ -9,16 +9,15 @@
 //!
 
 #![no_std]
-#![feature(type_alias_impl_trait)]
+#![feature(async_fn_in_trait)]
+#![allow(incomplete_features)]
 
 use core::convert::{TryFrom, TryInto};
 use core::fmt::Debug;
-use core::future::Future;
 
 use accelerometer::vector::{F32x3, I16x3};
-use embedded_hal::spi::SpiBusWrite;
 use embedded_hal_async::i2c::I2c;
-use embedded_hal_async::spi::{transaction, SpiBus, SpiDevice};
+use embedded_hal_async::spi::{self, SpiDevice};
 
 mod interrupts;
 mod register;
@@ -130,7 +129,6 @@ where
 impl<SPI, ESPI> Lis3dh<Lis3dhSPI<SPI>>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     /// Create a new LIS3DH driver from the given SPI peripheral.
     /// An example using the [nrf52840_hal](https://docs.rs/nrf52840-hal/latest/nrf52840_hal/index.html):
@@ -730,21 +728,15 @@ where
 pub trait Lis3dhCore {
     type BusError;
 
-    type WriteRegisterFuture<'a>: Future<Output = Result<(), Error<Self::BusError>>> + 'a
-    where
-        Self: 'a;
-    type ReadRegisterFuture<'a>: Future<Output = Result<u8, Error<Self::BusError>>> + 'a
-    where
-        Self: 'a;
-    type ReadAccelBytesFuture<'a>: Future<Output = Result<[u8; 6], Error<Self::BusError>>> + 'a
-    where
-        Self: 'a;
+    async fn write_register(
+        &mut self,
+        register: Register,
+        value: u8,
+    ) -> Result<(), Error<Self::BusError>>;
 
-    fn write_register(&mut self, register: Register, value: u8) -> Self::WriteRegisterFuture<'_>;
+    async fn read_register(&mut self, register: Register) -> Result<u8, Error<Self::BusError>>;
 
-    fn read_register(&mut self, register: Register) -> Self::ReadRegisterFuture<'_>;
-
-    fn read_accel_bytes(&mut self) -> Self::ReadAccelBytesFuture<'_>;
+    async fn read_accel_bytes(&mut self) -> Result<[u8; 6], Error<Self::BusError>>;
 }
 
 impl<CORE> Lis3dhCore for Lis3dh<CORE>
@@ -753,29 +745,20 @@ where
 {
     type BusError = CORE::BusError;
 
-    type WriteRegisterFuture<'a> =
-        impl Future<Output = Result<(), Error<Self::BusError>>>+ 'a
-        where
-            Self: 'a;
-    type ReadRegisterFuture<'a> =
-        impl Future<Output = Result<u8, Error<Self::BusError>>>+ 'a
-        where
-            Self: 'a;
-    type ReadAccelBytesFuture<'a> =
-        impl Future<Output = Result<[u8; 6], Error<Self::BusError>>>+ 'a
-        where
-            Self: 'a;
-
-    fn write_register(&mut self, register: Register, value: u8) -> Self::WriteRegisterFuture<'_> {
-        async move { self.core.write_register(register, value).await }
+    async fn write_register(
+        &mut self,
+        register: Register,
+        value: u8,
+    ) -> Result<(), Error<Self::BusError>> {
+        self.core.write_register(register, value).await
     }
 
-    fn read_register(&mut self, register: Register) -> Self::ReadRegisterFuture<'_> {
-        async move { self.core.read_register(register).await }
+    async fn read_register(&mut self, register: Register) -> Result<u8, Error<Self::BusError>> {
+        self.core.read_register(register).await
     }
 
-    fn read_accel_bytes(&mut self) -> Self::ReadAccelBytesFuture<'_> {
-        async move { self.core.read_accel_bytes().await }
+    async fn read_accel_bytes(&mut self) -> Result<[u8; 6], Error<Self::BusError>> {
+        self.core.read_accel_bytes().await
     }
 }
 
@@ -794,57 +777,42 @@ where
 {
     type BusError = E;
 
-    type WriteRegisterFuture<'a> =
-    impl Future<Output = Result<(), Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-    type ReadRegisterFuture<'a> =
-    impl Future<Output = Result<u8, Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-    type ReadAccelBytesFuture<'a> =
-    impl Future<Output = Result<[u8; 6], Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-
     /// Write a byte to the given register.
-    fn write_register(&mut self, register: Register, value: u8) -> Self::WriteRegisterFuture<'_> {
-        async move {
-            if register.read_only() {
-                return Err(Error::WriteToReadOnly);
-            }
-
-            self.i2c
-                .write(self.address, &[register.addr(), value])
-                .await
-                .map_err(Error::Bus)
+    async fn write_register(
+        &mut self,
+        register: Register,
+        value: u8,
+    ) -> Result<(), Error<Self::BusError>> {
+        if register.read_only() {
+            return Err(Error::WriteToReadOnly);
         }
+
+        self.i2c
+            .write(self.address, &[register.addr(), value])
+            .await
+            .map_err(Error::Bus)
     }
 
     /// Read a byte from the given register.
-    fn read_register(&mut self, register: Register) -> Self::ReadRegisterFuture<'_> {
-        async move {
-            let mut data = [0];
+    async fn read_register(&mut self, register: Register) -> Result<u8, Error<Self::BusError>> {
+        let mut data = [0];
 
-            self.i2c
-                .write_read(self.address, &[register.addr()], &mut data)
-                .await
-                .map_err(Error::Bus)
-                .and(Ok(data[0]))
-        }
+        self.i2c
+            .write_read(self.address, &[register.addr()], &mut data)
+            .await
+            .map_err(Error::Bus)
+            .and(Ok(data[0]))
     }
 
     /// Read from the registers for each of the 3 axes.
-    fn read_accel_bytes(&mut self) -> Self::ReadAccelBytesFuture<'_> {
-        async move {
-            let mut data = [0u8; 6];
+    async fn read_accel_bytes(&mut self) -> Result<[u8; 6], Error<Self::BusError>> {
+        let mut data = [0u8; 6];
 
-            self.i2c
-                .write_read(self.address, &[Register::OUT_X_L.addr() | 0x80], &mut data)
-                .await
-                .map_err(Error::Bus)
-                .and(Ok(data))
-        }
+        self.i2c
+            .write_read(self.address, &[Register::OUT_X_L.addr() | 0x80], &mut data)
+            .await
+            .map_err(Error::Bus)
+            .and(Ok(data))
     }
 }
 
@@ -857,7 +825,6 @@ pub struct Lis3dhSPI<SPI> {
 impl<SPI, ESPI> Lis3dhSPI<SPI>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     /// Writes to many registers. Does not check whether all registers
     /// can be written to
@@ -866,15 +833,13 @@ where
         start_register: Register,
         data: &[u8],
     ) -> Result<(), Error<ESPI>> {
-        transaction!(&mut self.spi, move |bus| async move {
-            // Unlike `SpiDevice::transaction`, we don't need to
-            // manually dereference a pointer in order to use the bus.
-            bus.write(&[start_register.addr() | 0x40])?;
-            bus.write(data)?;
-            Ok(())
-        })
-        .await
-        .map_err(Error::Bus)?;
+        self.spi
+            .transaction(&mut [
+                spi::Operation::Write(&[start_register.addr() | 0x40]),
+                spi::Operation::Write(data),
+            ])
+            .await
+            .map_err(Error::Bus)?;
 
         Ok(())
     }
@@ -885,15 +850,13 @@ where
         start_register: Register,
         buf: &mut [u8],
     ) -> Result<(), Error<ESPI>> {
-        transaction!(&mut self.spi, move |bus| async move {
-            // Unlike `SpiDevice::transaction`, we don't need to
-            // manually dereference a pointer in order to use the bus.
-            bus.write(&[start_register.addr() | 0xC0])?;
-            bus.transfer_in_place(buf).await?;
-            Ok(())
-        })
-        .await
-        .map_err(Error::Bus)?;
+        self.spi
+            .transaction(&mut [
+                spi::Operation::Write(&[start_register.addr() | 0xC0]),
+                spi::Operation::TransferInPlace(buf),
+            ])
+            .await
+            .map_err(Error::Bus)?;
 
         Ok(())
     }
@@ -902,60 +865,42 @@ where
 impl<SPI, ESPI> Lis3dhCore for Lis3dhSPI<SPI>
 where
     SPI: SpiDevice<Error = ESPI>,
-    SPI::Bus: SpiBus + SpiBusWrite,
 {
     type BusError = ESPI;
 
-    type WriteRegisterFuture<'a> =
-    impl Future<Output = Result<(), Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-    type ReadRegisterFuture<'a> =
-    impl Future<Output = Result<u8, Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-    type ReadAccelBytesFuture<'a> =
-    impl Future<Output = Result<[u8; 6], Error<Self::BusError>>>+ 'a
-    where
-        Self: 'a;
-
     /// Write a byte to the given register.
-    fn write_register(&mut self, register: Register, value: u8) -> Self::WriteRegisterFuture<'_> {
-        async move {
-            if register.read_only() {
-                return Err(Error::WriteToReadOnly);
-            }
-            unsafe { self.write_multiple_regs(register, &[value]).await }
+    async fn write_register(
+        &mut self,
+        register: Register,
+        value: u8,
+    ) -> Result<(), Error<Self::BusError>> {
+        if register.read_only() {
+            return Err(Error::WriteToReadOnly);
         }
+        unsafe { self.write_multiple_regs(register, &[value]).await }
     }
 
     /// Read a byte from the given register.
-    fn read_register(&mut self, register: Register) -> Self::ReadRegisterFuture<'_> {
-        async move {
-            let mut data = [0];
+    async fn read_register(&mut self, register: Register) -> Result<u8, Error<Self::BusError>> {
+        let mut data = [0];
 
-            transaction!(&mut self.spi, move |bus| async move {
-                // Unlike `SpiDevice::transaction`, we don't need to
-                // manually dereference a pointer in order to use the bus.
-                bus.write(&[register.addr() | 0x80])?;
-                bus.transfer_in_place(&mut data).await?;
-                Ok(())
-            })
+        self.spi
+            .transaction(&mut [
+                spi::Operation::Write(&[register.addr() | 0x80]),
+                spi::Operation::TransferInPlace(&mut data),
+            ])
             .await
             .map_err(Error::Bus)?;
 
-            Ok(data[0])
-        }
+        Ok(data[0])
     }
 
     /// Read from the registers for each of the 3 axes.
-    fn read_accel_bytes(&mut self) -> Self::ReadAccelBytesFuture<'_> {
-        async move {
-            let mut data = [0u8; 6];
-            self.read_multiple_regs(Register::OUT_X_L, &mut data)
-                .await?;
-            Ok(data)
-        }
+    async fn read_accel_bytes(&mut self) -> Result<[u8; 6], Error<Self::BusError>> {
+        let mut data = [0u8; 6];
+        self.read_multiple_regs(Register::OUT_X_L, &mut data)
+            .await?;
+        Ok(data)
     }
 }
 
