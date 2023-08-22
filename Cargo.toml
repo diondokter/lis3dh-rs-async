@@ -20,8 +20,8 @@ rust-version = "1.65"
 
 [dependencies]
 accelerometer = "~0.12"
-embedded-hal-async = "0.2.0-alpha.1"
-num_enum = { version = "0.6.1", default-features = false }
+embedded-hal-async = "1.0.0-rc.1"
+num_enum = { version = "0.7", default-features = false }
 defmt = { version = "0.3", optional = true }
 
 [features]
