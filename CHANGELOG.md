@@ -1,3 +1,6 @@
+# 0.8.0
+* BREAKING - Now using `embedded-hal-async` version `1.0.0-rc.1`
+
 # 0.7.0
 * BREAKING - Now using `embedded-hal-async` version `0.2.0-alpha.1`
 

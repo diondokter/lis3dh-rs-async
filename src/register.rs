@@ -107,6 +107,7 @@ impl Register {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, TryFromPrimitive)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 #[repr(u8)]
+#[derive(Default)]
 pub enum Range {
     /// ±16g
     G16 = 0b11,
@@ -118,6 +119,7 @@ pub enum Range {
     G4 = 0b01,
 
     /// ±2g (Default)
+    #[default]
     G2 = 0b00,
 }
 
@@ -137,11 +139,7 @@ impl Range {
     }
 }
 
-impl Default for Range {
-    fn default() -> Self {
-        Range::G2
-    }
-}
+
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]

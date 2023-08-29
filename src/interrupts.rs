@@ -81,18 +81,16 @@ impl Interrupt for Interrupt2 {
 /// | 1 | 1 | 6-direction position recognition  |
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Default)]
 pub enum InterruptMode {
+    #[default]
     OrCombination = 0b00 << 6,
     Movement = 0b01 << 6,
     AndCombination = 0b10 << 6,
     Position = 0b11 << 6,
 }
 
-impl Default for InterruptMode {
-    fn default() -> Self {
-        InterruptMode::OrCombination
-    }
-}
+
 
 impl InterruptMode {
     const fn from_bits(input: u8) -> Self {
@@ -319,16 +317,14 @@ impl InterruptSource {
 /// [`get_irq_src`]: crate::Lis3dh::get_irq_src
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Default)]
 pub enum LatchInterruptRequest {
     Enable,
+    #[default]
     Disable,
 }
 
-impl Default for LatchInterruptRequest {
-    fn default() -> Self {
-        LatchInterruptRequest::Disable
-    }
-}
+
 
 impl From<bool> for LatchInterruptRequest {
     fn from(input: bool) -> Self {
@@ -344,16 +340,14 @@ impl From<bool> for LatchInterruptRequest {
 /// This setting only has effect when the interrupt mode is either `Movement` or `Position`.
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[derive(Default)]
 pub enum Detect4D {
     Enable,
+    #[default]
     Disable,
 }
 
-impl Default for Detect4D {
-    fn default() -> Self {
-        Detect4D::Disable
-    }
-}
+
 
 impl From<bool> for Detect4D {
     fn from(input: bool) -> Self {
