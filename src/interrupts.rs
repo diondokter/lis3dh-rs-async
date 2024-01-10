@@ -90,8 +90,6 @@ pub enum InterruptMode {
     Position = 0b11 << 6,
 }
 
-
-
 impl InterruptMode {
     const fn from_bits(input: u8) -> Self {
         match input >> 6 {
@@ -324,8 +322,6 @@ pub enum LatchInterruptRequest {
     Disable,
 }
 
-
-
 impl From<bool> for LatchInterruptRequest {
     fn from(input: bool) -> Self {
         if input {
@@ -346,8 +342,6 @@ pub enum Detect4D {
     #[default]
     Disable,
 }
-
-
 
 impl From<bool> for Detect4D {
     fn from(input: bool) -> Self {

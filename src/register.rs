@@ -139,8 +139,6 @@ impl Range {
     }
 }
 
-
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Default)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub struct Threshold(pub(crate) u8);
