@@ -1,3 +1,6 @@
+# 0.9.2
+* Removed wrong examples
+
 # 0.9.1
 * Better crate description
 

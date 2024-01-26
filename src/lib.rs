@@ -68,29 +68,6 @@ where
 {
     /// Create a new LIS3DH driver from the given I2C peripheral using the default config.
     /// Default is Hz_400 HighResolution.
-    /// An example using the [nrf52840_hal](https://docs.rs/nrf52840-hal/latest/nrf52840_hal/index.html):
-    ///
-    /// ```rust,ignore
-    /// use nrf52840_hal::gpio::{Level, PushPull};
-    /// use lis3dh::Lis3dh;
-    ///
-    /// let peripherals = nrf52840_hal::pac::Peripherals::take().unwrap();
-    /// let pins = p0::Parts::new(peripherals.P0);
-    ///
-    /// let twim0_scl = pins.p0_31.into_floating_input().degrade();
-    /// let twim0_sda = pins.p0_30.into_floating_input().degrade();
-    ///
-    /// let i2c = nrf52840_hal::twim::Twim::new(
-    ///     peripherals.TWIM0,
-    ///     nrf52840_hal::twim::Pins {
-    ///         scl: twim0_scl,
-    ///         sda: twim0_sda,
-    ///     },
-    ///     nrf52840_hal::twim::Frequency::K400,
-    /// );
-    ///
-    /// let lis3dh = Lis3dh::new_i2c(i2c, lis3dh::SlaveAddr::Default).unwrap();
-    /// ```
     pub async fn new_i2c(i2c: I2C, address: SlaveAddr) -> Result<Self, Error<E>> {
         Self::new_i2c_with_config(i2c, address, Configuration::default()).await
     }
@@ -130,37 +107,6 @@ where
     SPI: SpiDevice<Error = ESPI>,
 {
     /// Create a new LIS3DH driver from the given SPI peripheral.
-    /// An example using the [nrf52840_hal](https://docs.rs/nrf52840-hal/latest/nrf52840_hal/index.html):
-    ///
-    /// ```rust,ignore
-    /// use nrf52840_hal::gpio::{p0::{Parts, P0_28}, *};
-    /// use nrf52840_hal::spim::Spim;
-    /// use lis3dh::Lis3dh;
-    ///
-    /// let peripherals = nrf52840_hal::pac::Peripherals::take().unwrap();
-    /// let port0 = Parts::new(peripherals.P0);
-    ///
-    /// // define the chip select pin
-    /// let cs: P0_28<Output<PushPull>> = port0.p0_28.into_push_pull_output(Level::High);
-    ///
-    /// // spi pins: clock, miso, mosi
-    /// let pins = nrf52840_hal::spim::Pins {
-    ///     sck: port0.p0_31.into_push_pull_output(Level::Low).degrade(),
-    ///     miso: Some(port0.p0_30.into_push_pull_output(Level::Low).degrade()),
-    ///     mosi: Some(port0.p0_29.into_floating_input().degrade()),
-    /// };
-    ///
-    /// // set up the spi peripheral
-    /// let spi = Spim::new(
-    ///     peripherals.SPIM2,
-    ///     pins,
-    ///     nrf52840_hal::spim::Frequency::K500,
-    ///     nrf52840_hal::spim::MODE_0,
-    ///     0,
-    /// );
-    /// // create and initialize the sensor
-    /// let lis3dh = Lis3dh::new_spi(spi, cs).unwrap();
-    /// ```
     pub async fn new_spi(spi: SPI) -> Result<Self, Error<ESPI>> {
         Self::new_spi_with_config(spi, Configuration::default()).await
     }
