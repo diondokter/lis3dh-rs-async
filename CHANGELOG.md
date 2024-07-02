@@ -1,3 +1,6 @@
+# 0.9.3
+* add drive-rs.toml to be listed on drive-rs driver listing
+
 # 0.9.2
 * Removed wrong examples
 
