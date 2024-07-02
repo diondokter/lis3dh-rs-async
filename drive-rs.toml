@@ -1,0 +1,19 @@
+manifest_version = "0.0.1"
+
+[meta]
+names = ["LIS3DH"]
+manufacturer = "ST"
+datasheets = ["https://www.st.com/resource/en/datasheet/lis3dh.pdf"]
+categories = ["Sensor::Accelerometer"]
+part_numbers = ["LIS3DHTR"]
+
+kicad_symbol = ["Sensor_Motion::LIS3DH"]
+packages = ["LGA-16"]
+
+[dev_boards]
+adafruit = 2809
+sparkfun = 13963
+
+[interfaces.i2c]
+addrs = [0x18, 0x19]
+interrupt = true
